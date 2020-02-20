@@ -92,7 +92,6 @@ export function parseRgba(rgbaString: string): Color {
     return new Color(parseInt(tokens[0], 10) / 255, parseInt(tokens[1], 10) / 255, parseInt(tokens[2], 10) / 255, parseInt(tokens[3], 10) / 255);
 }
 
-
 /**
  * Creates a Color object based on a CSS color string. Supports the following notations:
  *  - hex
@@ -110,7 +109,12 @@ export let parseCssColor = (function () {
     canvas.width = 1;
     canvas.height = 1;
     const g = canvas.getContext('2d');
+    const colorCache = new Map<string, Color>();
     return function (cssColorString: string): Color {
+        let color = colorCache.get(cssColorString);
+        if (color) {
+            return color;
+        }
         g.clearRect(0, 0, 1, 1);
         g.fillStyle = cssColorString;
         g.fillRect(0, 0, 1, 1);
@@ -120,7 +124,9 @@ export let parseCssColor = (function () {
         const G = rgbaData[1] / 255;
         const B = rgbaData[2] / 255;
         const A = rgbaData[3] / 255;
-        return rgba(R, G, B, A);
+        color = rgba(R, G, B, A);
+        colorCache.set(cssColorString, color);
+        return color;
     };
 })();
 

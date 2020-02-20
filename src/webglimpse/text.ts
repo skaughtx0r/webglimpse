@@ -234,46 +234,18 @@ export function createTextTextureFactory(font: string): TextTextureFactory {
         const w = getTextWidth(font, text);
 
         return new TextTexture2D(w, h, jBaseline, GL.NEAREST, GL.NEAREST, function (g: CanvasRenderingContext2D) {
-            // Some browsers use hinting for canvas fillText! This behaves poorly on a transparent
-            // background -- so we draw white text onto a black background, then infer alpha from
-            // the pixel color (black = transparent, white = opaque).
-            //
-            // We compute alpha as (R+G+B)/3. This grayscales the image the browser drew, effectively
-            // de-hinting it.
-            //
-
-            g.fillStyle = 'black';
+            g.fillStyle = 'transparent';
             g.fillRect(0, 0, w, h);
 
             g.font = font;
             g.textAlign = 'left';
             g.textBaseline = 'top';
-            g.fillStyle = 'white';
+            g.fillStyle = color.cssString;
 
             g.save();
             g.translate(0, -rawFontMetrics.jTop);
             g.fillText(text, 0, 0);
             g.restore();
-
-            const r255 = 255 * color.r;
-            const g255 = 255 * color.g;
-            const b255 = 255 * color.b;
-            const aFactor = color.a / 3;
-
-            const pixels = g.getImageData(0, 0, w, h);
-            for (let j = 0; j < pixels.height; j++) {
-                for (let i = 0; i < pixels.width; i++) {
-                    const pixelOffset = (j * pixels.width + i) * 4;
-                    const a255 = aFactor * (pixels.data[pixelOffset + 0] + pixels.data[pixelOffset + 1] + pixels.data[pixelOffset + 2]);
-
-                    pixels.data[pixelOffset + 0] = r255;
-                    pixels.data[pixelOffset + 1] = g255;
-                    pixels.data[pixelOffset + 2] = b255;
-                    pixels.data[pixelOffset + 3] = a255;
-                }
-            }
-
-            g.putImageData(pixels, 0, 0);
         });
     };
 }
